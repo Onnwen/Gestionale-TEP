@@ -6,32 +6,33 @@
     <script src="node_modules/bootstrap/dist/js/bootstrap.min.js"></script>
     <script src="node_modules/jquery/dist/jquery.min.js"></script>
     <script src="https://www.openlayers.org/api/OpenLayers.js"></script>
+    <script src="js/main.js"></script>
+    <script src="js/busMap.js"></script>
     <link rel="stylesheet" href="node_modules/bootstrap/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="node_modules/bootstrap-icons/font/bootstrap-icons.css">
     <link rel="stylesheet" href="css/style.css">
 </head>
 
-<body>
+<body onload="init()">
 <div class="wrapper">
     <nav style="position: fixed; left: 0; top: 0; height: 100%;" class="sidebar" id="sidebar">
         <div class="d-flex flex-column flex-shrink-0 p-3 text-white bg-dark sidebar">
             <span class="fs-4">Dashboard TEP</span>
             <hr>
-            <div class="nav nav-pills flex-column mb-auto d-grid gap-2" id="v-pills-tab" role="tablist"
-                 aria-orientation="vertical">
-                <button class="nav-link active text-white text-start" id="v-pills-general-tab" data-bs-toggle="pill" data-bs-target="#v-pills-general" aria-controls="v-pills-general">
+            <div class="nav nav-pills flex-column mb-auto d-grid gap-2" id="tab" role="tablist" aria-orientation="vertical">
+                <button class="nav-link active text-white text-start" id="general-tab" data-bs-toggle="pill" data-bs-target="#general" aria-controls="general">
                     <i class="bi bi-house-fill"></i>
                     <span class="nav-text">Generale</span>
                 </button>
-                <button class="nav-link text-white text-start" id="v-pills-bus-tab" data-bs-toggle="pill" data-bs-target="#v-pills-bus" aria-controls="v-pills-bus">
+                <button class="nav-link text-white text-start" id="bus-tab" data-bs-toggle="pill" data-bs-target="#bus" aria-controls="bus">
                     <i class="bi bi-bus-front-fill"></i>
                     <span class="nav-text">Autobus</span>
                 </button>
-                <button class="nav-link text-white text-start" id="v-pills-tracks-tab" data-bs-toggle="pill" data-bs-target="#v-pills-tracks" aria-controls="v-pills-tracks">
+                <button class="nav-link text-white text-start" id="tracks-tab" data-bs-toggle="pill" data-bs-target="#tracks" aria-controls="tracks">
                     <i class="bi bi-signpost-split-fill"></i>
                     <span class="nav-text">Linee</span>
                 </button>
-                <button class="nav-link text-white text-start" id="v-pills-passengers-tab" data-bs-toggle="pill" data-bs-target="#v-pills-passengers" aria-controls="v-pills-passengers">
+                <button class="nav-link text-white text-start" id="passengers-tab" data-bs-toggle="pill" data-bs-target="#passengers" aria-controls="passengers">
                     <i class="bi bi-people-fill"></i>
                     <span class="nav-text">Passeggeri</span>
                 </button>
@@ -39,13 +40,15 @@
         </div>
     </nav>
     <div class="margin" id="content">
-        <div class="tab-content px-4 py-4" id="v-pills-tabContent">
+        <div class="tab-content px-4 py-4" id="tabContent">
             <a onclick="sidebarButton()">
                 <i style="font-size: 23px; color: gray;" class="bi bi-x-lg pb-5" id="sidebarIcon"></i>
             </a>
-            <div class="tab-pane fade show active pt-4" id="v-pills-general" aria-labelledby="v-pills-home-tab">
-                <h2 class="pb-2 border-bottom">Generale</h2></div>
-            <div class="tab-pane fade pt-4" id="v-pills-bus" aria-labelledby="v-pills-bus-tab" onload="init()">
+            <div class="tab-pane show active pt-4" id="general" aria-labelledby="home-tab">
+                <h2 class="pb-2 border-bottom">Generale</h2>
+                <div id="bus-map" style="height:600px;"></div>
+            </div>
+            <div class="tab-pane pt-4" id="bus" aria-labelledby="bus-tab">
                 <h2 class="pb-2 border-bottom">
                     Autobus
                 </h2>
@@ -77,9 +80,8 @@
                     </tbody>
                 </table>
                 <h2 class="pb-2 border-bottom" style="margin-top: 50px;">Mappa degli autobus</h2>
-                <div id="map" style="height:600px;"></div>
             </div>
-            <div class="tab-pane fade pt-4" id="v-pills-tracks" aria-labelledby="v-pills-tracks-tab">
+            <div class="tab-pane pt-4" id="tracks" aria-labelledby="tracks-tab">
                 <h2 class="pb-2 border-bottom">
                     Linee
                 </h2>
@@ -110,7 +112,7 @@
                 <h2 class="pb-2 border-bottom" style="margin-top: 50px;">Mappa delle linee</h2>
                 <div id="tracks-map" style="height:600px;"></div>>
             </div>
-            <div class="tab-pane fade pt-4" id="v-pills-passengers" aria-labelledby="v-pills-passengers-tab">
+            <div class="tab-pane pt-4" id="passengers" aria-labelledby="passengers-tab">
                 <h2 class="pb-2 border-bottom">
                     Passeggeri
                 </h2>
@@ -120,76 +122,5 @@
         </div>
     </div>
 </div>
-
-<script type="text/javascript">
-    var map, mappingLayer, vectorLayer, selectMarkerControl, selectedFeature;
-
-    function onFeatureSelect(feature) {
-        selectedFeature = feature;
-        popup = new OpenLayers.Popup.FramedCloud("tempId", feature.geometry.getBounds().getCenterLonLat(),
-            null,
-            selectedFeature.attributes.salutation + " from Lat:" + selectedFeature.attributes.Lat + " Lon:" + selectedFeature.attributes.Lon,
-            null, true);
-        feature.popup = popup;
-        map.addPopup(popup);
-    }
-
-    function onFeatureUnselect(feature) {
-        map.removePopup(feature.popup);
-        feature.popup.destroy();
-        feature.popup = null;
-    }
-
-    function init(){
-        map = new OpenLayers.Map( 'map');
-        mappingLayer = new OpenLayers.Layer.OSM("Simple OSM Map");
-
-        map.addLayer(mappingLayer);
-        vectorLayer = new OpenLayers.Layer.Vector("Vector Layer", {projection: "EPSG:4326"});
-        selectMarkerControl = new OpenLayers.Control.SelectFeature(vectorLayer, {onSelect: onFeatureSelect, onUnselect: onFeatureUnselect});
-        map.addControl(selectMarkerControl);
-
-        selectMarkerControl.activate();
-        map.addLayer(vectorLayer);
-        map.setCenter(
-            new OpenLayers.LonLat(0, 0).transform(
-                new OpenLayers.Projection("EPSG:4326"),
-                map.getProjectionObject())
-
-            , 1
-        );
-    }
-
-    function placeRandomMarker(){
-        var randomLat = Math.floor((Math.random()*180)-90);
-        var randomLon = Math.floor((Math.random()*180)-90);
-        var randomLonLat = new OpenLayers.Geometry.Point( randomLon, randomLat);
-        randomLonLat.transform("EPSG:4326", map.getProjectionObject());
-        var randomFeature = new OpenLayers.Feature.Vector(randomLonLat,
-            { salutation: "hello world", Lon : randomLon, Lat : randomLat});
-        vectorLayer.addFeatures(randomFeature);
-        var popup = new OpenLayers.Popup.FramedCloud("tempId", new OpenLayers.LonLat( randomLon, randomLat).transform("EPSG:4326", map.getProjectionObject()),
-            null,
-            randomFeature.attributes.salutation + " from Lat:" + randomFeature.attributes.Lat + " Lon:" + randomFeature.attributes.Lon,
-            null, true);
-        randomFeature.popup = popup;
-        map.addPopup(popup);
-    }
-
-    function sidebarButton() {
-        if (!document.getElementById("sidebar").classList.contains("active")) {
-            document.getElementById("sidebar").classList.add('active');
-            document.getElementById("sidebarIcon").classList.remove('bi-x');
-            document.getElementById("sidebarIcon").classList.add('bi-list');
-            document.getElementById("content").classList.add('full');
-        }
-        else {
-            document.getElementById("sidebar").classList.remove('active');
-            document.getElementById("sidebarIcon").classList.remove('bi-list');
-            document.getElementById("sidebarIcon").classList.add('bi-x');
-            document.getElementById("content").classList.remove('full');
-        }
-    }
-</script>
 </body>
 </html>
