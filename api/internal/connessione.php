@@ -1,3 +1,3 @@
 <?php
 
-$conn = mysqli_connect("localhost", "itsos", "", "TEP");
+$conn = mysqli_connect("localhost", "itsos", "", "Gestionale_Tep");

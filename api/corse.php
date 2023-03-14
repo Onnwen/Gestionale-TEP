@@ -6,7 +6,7 @@ $id = isset($_GET["id"]) ? $_GET["id"] : null;
 
 $extraQuery = "";
 if (!is_null($id)) {
-    $extraQuery = " WHERE id = " . $id;
+    $extraQuery = " WHERE idCorsa = " . $id;
 }
 
 
